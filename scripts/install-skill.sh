@@ -31,7 +31,7 @@ fi
 mkdir -p "$skills_dir"
 
 if [ -L "$link" ]; then
-	current="$(cd "$link" 2>/dev/null && pwd -P || true)"
+	current="$(cd "$link" 2>/dev/null && pwd -P)" || current=
 	if [ "$current" = "$root" ]; then
 		echo "Already installed: $link -> $root"
 		exit 0
