@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# Apply the "Main branch protection" ruleset (rulesets/main-branch-ruleset.json)
-# to a GitHub repo's default branch.
+# Apply the repo baseline to a GitHub repo:
+#   - repository settings from settings/repo-settings.json (e.g. deleting
+#     head branches automatically once their PR merges), and
+#   - the "Main branch protection" ruleset (rulesets/main-branch-ruleset.json)
+#     on its default branch.
 #
 # Usage:
-#   scripts/apply-branch-ruleset.sh [owner/repo] [check name]...
+#   scripts/apply-baseline.sh [owner/repo] [check name]...
 #
 #   owner/repo  defaults to the repo for the current directory.
 #   check name  each required status check, e.g. "Test (ubuntu-latest)".
@@ -21,12 +24,19 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd -P)"
 payload="$root/rulesets/main-branch-ruleset.json"
+settings="$root/settings/repo-settings.json"
 
 repo="${1:-}"
 [ $# -gt 0 ] && shift
 if [ -z "$repo" ]; then
 	repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 fi
+
+# Repo settings are a plain PATCH: only the keys in the file change, and
+# re-running is a no-op. Echo back just those keys as GitHub now has them.
+echo "Applying repo settings on $repo"
+gh api -X PATCH "repos/$repo" --input "$settings" |
+	jq -c --slurpfile want "$settings" 'with_entries(select(.key as $k | $want[0] | has($k)))'
 
 user_id=$(gh api user --jq .id)
 checks=$(printf '%s\n' "$@" | jq -R 'select(length > 0) | {context: .}' | jq -s .)

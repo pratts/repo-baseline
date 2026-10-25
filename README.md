@@ -5,6 +5,14 @@ gets the same rules and changes to the standard have history.
 
 ## What's in the baseline
 
+`settings/repo-settings.json` — repository settings, sent as-is to GitHub's
+[update a repository](https://docs.github.com/rest/repos/repos#update-a-repository)
+API, so any of that API's fields can be added here:
+
+| Setting | Effect |
+| --- | --- |
+| `delete_branch_on_merge` | A PR's head branch is deleted automatically once the PR merges |
+
 `rulesets/main-branch-ruleset.json` — a repository ruleset named
 "Main branch protection", targeting the default branch:
 
@@ -25,15 +33,17 @@ Requires [`gh`](https://cli.github.com/) (authenticated) and `jq`.
 
 ```sh
 # repo for the current directory, with required checks
-scripts/apply-branch-ruleset.sh "" "Test (ubuntu-latest)" "govulncheck"
+scripts/apply-baseline.sh "" "Test (ubuntu-latest)" "govulncheck"
 
 # a specific repo
-scripts/apply-branch-ruleset.sh pratts/other-repo "build" "lint"
+scripts/apply-baseline.sh pratts/other-repo "build" "lint"
 
 # a repo with no CI (the status-check rule is left out)
-scripts/apply-branch-ruleset.sh pratts/other-repo
+scripts/apply-baseline.sh pratts/other-repo
 ```
 
+- Repo settings are applied first. Only the keys in the settings file change,
+  and the script prints their new values.
 - The bypass actor is set to whoever `gh` is logged in as.
 - If the repo already has a ruleset with the same name, it is backed up to
   `backups/` (gitignored) and updated in place; otherwise a new one is created.
