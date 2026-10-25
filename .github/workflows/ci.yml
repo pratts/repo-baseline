@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: shellcheck / JSON
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v7
+
+      # shellcheck and jq are preinstalled on ubuntu-latest runners.
+      - name: shellcheck
+        run: shellcheck scripts/*.sh
+
+      - name: Validate ruleset JSON
+        run: |
+          for f in rulesets/*.json; do
+            jq -e '.name and .target and .enforcement and (.rules | length > 0)' "$f" >/dev/null \
+              || { echo "::error file=$f::invalid or incomplete ruleset JSON"; exit 1; }
+          done
