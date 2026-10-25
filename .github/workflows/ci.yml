@@ -26,3 +26,9 @@ jobs:
             jq -e '.name and .target and .enforcement and (.rules | length > 0)' "$f" >/dev/null \
               || { echo "::error file=$f::invalid or incomplete ruleset JSON"; exit 1; }
           done
+
+      - name: Validate repo settings JSON
+        run: |
+          f=settings/repo-settings.json
+          jq -e 'type == "object" and length > 0' "$f" >/dev/null \
+            || { echo "::error file=$f::must be a non-empty JSON object"; exit 1; }

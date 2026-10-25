@@ -1,18 +1,22 @@
 ---
 name: repo-baseline
-description: Apply the owner's standard GitHub repository baseline — currently the "Main branch protection" ruleset (PR-only changes to the default branch, 1 approving review, signed commits, no force pushes, required CI checks, owner bypass via PRs only). Use when the user asks to protect a repo's main/default branch, set up branch protection or rulesets, apply their repo baseline/standard settings to a repo, or check whether a repo matches that baseline.
+description: Apply the owner's standard GitHub repository baseline — repo settings (merged PR branches deleted automatically) plus the "Main branch protection" ruleset (PR-only changes to the default branch, 1 approving review, signed commits, no force pushes, required CI checks, owner bypass via PRs only). Use when the user asks to protect a repo's main/default branch, set up branch protection or rulesets, apply their repo baseline/standard settings to a repo, or check whether a repo matches that baseline.
 ---
 
 # Repo baseline
 
 The baseline lives in this skill's directory:
 
+- `settings/repo-settings.json` — repository settings (source of truth), e.g.
+  `delete_branch_on_merge`.
 - `rulesets/main-branch-ruleset.json` — the ruleset payload (source of truth).
-- `scripts/apply-branch-ruleset.sh` — creates or updates it on a repo.
+- `scripts/apply-baseline.sh` — applies both to a repo: settings first, then
+  creates or updates the ruleset.
 
-Never hand-edit the ruleset on GitHub to apply the baseline; run the script,
-so every repo gets the same payload. If the user wants the baseline itself
-changed, edit the JSON here and say so — it affects future repos.
+Never hand-edit these settings or the ruleset on GitHub to apply the
+baseline; run the script, so every repo gets the same payload. If the user
+wants the baseline itself changed, edit the JSON here and say so — it
+affects future repos.
 
 ## Applying it
 
@@ -48,12 +52,14 @@ changed, edit the JSON here and say so — it affects future repos.
 
 4. **Run it.**
    ```sh
-   <this skill's dir>/scripts/apply-branch-ruleset.sh <owner/repo> "<check 1>" "<check 2>" ...
+   <this skill's dir>/scripts/apply-baseline.sh <owner/repo> "<check 1>" "<check 2>" ...
    ```
    Use the skill directory path, not the target repo's. The bypass actor is
-   set to the authenticated `gh` user automatically.
+   set to the authenticated `gh` user automatically. The script also applies
+   the repo settings and prints their new values.
 
-5. **Report.** Whether the repo was protected before and how, what changed,
+5. **Report.** Whether the repo was protected before and how, which repo
+   settings changed, what else changed,
    the final required checks, the backup path if one was written, and any jobs
    deliberately left out of the required checks.
 
